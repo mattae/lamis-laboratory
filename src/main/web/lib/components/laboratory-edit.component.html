@@ -1,0 +1,259 @@
+<div class="lamis-edit-form">
+    <div class="lamis-edit-form-container">
+        <form name="form" role="form" novalidate (ngSubmit)="save()" #laboratoryForm="ngForm">
+            <mat-card class="default">
+                <mat-card-header>
+                </mat-card-header>
+                <mat-card-content *ngIf="patient">
+                    <div>
+                        <mat-form-field class="full-width" *ngIf="entity && dateRegistration">
+                            <input matInput [matDatepicker]="picker"
+                                   placeholder="Date of Sample Collection"
+                                   [(ngModel)]="entity.dateSampleCollected"
+                                   #dateCollected="ngModel"
+                                   (dateChange)="sampleDateChanged($event.value)"
+                                   [max]="today"
+                                   [min]="dateRegistration"
+                                   required
+                                   name="dateCollected">
+                            <mat-datepicker-toggle
+                                    matSuffix
+                                    [for]="picker">
+                            </mat-datepicker-toggle>
+                            <mat-datepicker #picker></mat-datepicker>
+                            <mat-error
+                                    *ngIf="dateCollected.errors && (dateCollected.dirty || dateCollected.touched) && (dateCollected.errors.required)">
+                                Date of Sample Collection is required
+                            </mat-error>
+                            <mat-error
+                                    *ngIf="dateCollected.errors && (dateCollected.dirty || dateCollected.touched) && (dateCollected.errors.min)">
+                                Date of Sample Collection cannot be
+                                before {{entity.patient.dateRegistration | date: 'dd MMM, yyyy'}}
+                            </mat-error>
+                            <mat-error
+                                    *ngIf="dateCollected.errors && (dateCollected.dirty || dateCollected.touched) && (dateCollected.errors.max)">
+                                Date of Sample Collection cannot be in the future
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div>
+                        <mat-form-field class="full-width">
+                            <input matInput [(ngModel)]="entity.labNo"
+                                   placeholder="Laboratory Number"
+                                   #labNo="ngModel" required name="labNo"/>
+                            <mat-error
+                                    *ngIf="labNo.errors && (labNo.dirty || labNo.touched) && (labNo.errors.required)">
+                                Lab Number is required
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div *ngIf="minAssayDate">
+                        <mat-form-field class="full-width">
+                            <input matInput [matDatepicker]="picker1"
+                                   placeholder="Date Assay"
+                                   [(ngModel)]="entity.dateAssay"
+                                   [matDatepickerFilter]="filterDates.bind(this)"
+                                   (dateChange)="assayDateChanged($event.value)"
+                                   #dateAssay="ngModel"
+                                   [min]="minAssayDate"
+                                   [max]="today"
+                                   name="dateAssay">
+                            <mat-datepicker-toggle
+                                    matSuffix
+                                    [for]="picker1">
+                            </mat-datepicker-toggle>
+                            <mat-datepicker #picker1></mat-datepicker>
+                            <mat-error
+                                    *ngIf="dateAssay.errors && (dateAssay.dirty || dateAssay.touched) && (dateAssay.errors.required)">
+                                Date Assay is required
+                            </mat-error>
+                            <mat-error
+                                    *ngIf="dateAssay.errors && (dateAssay.dirty || dateAssay.touched) && (dateAssay.errors.max)">
+                                Date Assay must be after {{today | date: 'dd MMM, yyyy'}}
+                            </mat-error>
+                            <mat-error
+                                    *ngIf="dateAssay.errors && (dateAssay.dirty || dateAssay.touched) && (dateAssay.errors.min)">
+                                Date Assay must be after {{minAssayDate}}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div *ngIf="minReportedDate">
+                        <mat-form-field class="full-width">
+                            <input matInput [matDatepicker]="picker2"
+                                   placeholder="Date Result Received"
+                                   [(ngModel)]="entity.dateResultReceived"
+                                   [matDatepickerFilter]="filterDates.bind(this)"
+                                   #dateReported="ngModel"
+                                   [min]="minReportedDate"
+                                   [max]="today"
+                                   [required]="!!entity.dateAssay"
+                                   name="dateReported">
+                            <mat-datepicker-toggle
+                                    matSuffix
+                                    [for]="picker2">
+                            </mat-datepicker-toggle>
+                            <mat-datepicker #picker2></mat-datepicker>
+                            <mat-error
+                                    *ngIf="dateReported.errors && (dateReported.dirty || dateReported.touched) && (dateReported.errors.required)">
+                                Date Result Received is required
+                            </mat-error>
+                            <mat-error
+                                    *ngIf="dateReported.errors && (dateReported.dirty || dateReported.touched) && (dateReported.errors.max)">
+                                Date Result Received must be after {{today | date: 'dd MMM, yyyy'}}
+                            </mat-error>
+                            <mat-error
+                                    *ngIf="dateReported.errors && (dateReported.dirty || dateReported.touched) && (dateReported.errors.min)">
+                                Date Result Received must not be before {{minReportedDate | date : 'dd MMM, yyyy'}}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <mat-form-field>
+                                <mat-select placeholder="Laboratory Test Category"
+                                            (selectionChange)="categoryChanged($event.value)">
+                                    <mat-option></mat-option>
+                                    <mat-option *ngFor="let category of categories"
+                                                [value]="category">{{category.category}}</mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                        </div>
+                        <div class="col-md-6">
+                            <mat-form-field>
+                                <mat-select placeholder="Laboratory Test"
+                                            multiple
+                                            name="regimen"
+                                            [(ngModel)]="selectedTests"
+                                            [compareWith]="entityCompare"
+                                            (selectionChange)="testChanged($event.value)">
+                                    <mat-option *ngFor="let test of tests"
+                                                [value]="test">{{test.description}}</mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div class="row">
+                        Selected Test
+                        <mat-divider></mat-divider>
+                        <ngx-datatable
+                            #mydatatable
+                            class="material full-width"
+                            [headerHeight]="50"
+                            [limit]="5"
+                            [columnMode]="ColumnMode.force"
+                            [footerHeight]="50"
+                            rowHeight="auto"
+                            [rows]="rows"
+                        >
+                            <ngx-datatable-column name="Test Description" [prop]="'description'"
+                                                  [canAutoResize]="true">
+                                <ng-template ngx-datatable-cell-template let-value="value">
+                                    <mat-form-field class="full-width">
+                                        <input matInput disabled [value]="value" style="font-weight: 900">
+                                    </mat-form-field>
+                                </ng-template>
+                            </ngx-datatable-column>
+                            <ngx-datatable-column name="Result" [prop]="'result'" [canAutoResize]="true">
+                                <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value"
+                                             let-row="row">
+                                    <!--<mat-form-field *ngIf="!editing[rowIndex + '']" class="full-width">
+                                        <input matInput [value]="value" disabled>
+                                    </mat-form-field>
+                                    <mat-form-field *ngIf="editing[rowIndex + '']">-->
+                                    <mat-form-field class="full-width">
+                                        <input
+                                                autofocus
+                                                matInput
+                                                type="text"
+                                                name="result"
+                                                [required]="!!entity.dateAssay"
+                                                (blur)="updateValue($event, 'result', rowIndex)"
+                                                [value]="value || ''"
+                                        >
+                                        <span matSuffix>&nbsp;{{row.unit}}</span>
+                                        <mat-error *ngIf="errors[rowIndex + '-result']">
+                                            Result value is required
+                                        </mat-error>
+                                    </mat-form-field>
+                                </ng-template>
+                            </ngx-datatable-column>
+                            <ngx-datatable-column [maxWidth]="1">
+                                <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value"
+                                             let-row="row">
+                                </ng-template>
+                            </ngx-datatable-column>
+                            <ngx-datatable-column name="Comment" [prop]="'comment'" [canAutoResize]="true">
+                                <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value"
+                                             let-row="row">
+                                    <!--<mat-form-field *ngIf="!editing[rowIndex + '']" class="full-width">
+                                        <textarea matInput [value]="value" disabled rows="2"></textarea>
+                                    </mat-form-field>
+                                    <mat-form-field *ngIf="editing[rowIndex + '']">-->
+                                    <mat-form-field class="full-width">
+                                        <textarea
+                                                autofocus
+                                                matInput
+                                                rows="2"
+                                                (blur)="updateValue($event, 'comment', rowIndex)"
+                                                [value]="value"
+                                        ></textarea>
+                                    </mat-form-field>
+                                </ng-template>
+                            </ngx-datatable-column>
+                            <ngx-datatable-column name="Indication" [canAutoResize]="true">
+                                <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value"
+                                             let-row="row">
+                                    <!--<mat-form-field *ngIf="!editing[rowIndex + '']" class="full-width">
+                                        <input matInput [value]="value" disabled>
+                                    </mat-form-field>
+                                    <mat-form-field *ngIf="editing[rowIndex + '']">-->
+                                    <mat-form-field class="full-width">
+                                        <mat-select autofocus
+                                                    [value]="value"
+                                                    [required]="row.lab_test_id === 16"
+                                                    name="ind"
+                                                    (valueChange)="updateValue($event, 'indication', rowIndex)">
+                                            <mat-option></mat-option>
+                                            <mat-option [value]="'Routine Monitoring'">Routine Monitoring</mat-option>
+                                            <mat-option [value]="'Targeted Monitoring'">Targeted Monitoring</mat-option>
+                                        </mat-select>
+                                        <mat-error *ngIf="errors[rowIndex + '-indication']">
+                                            Viral Load indication is required
+                                        </mat-error>
+                                    </mat-form-field>
+                                </ng-template>
+                            </ngx-datatable-column>
+                            <!--<ngx-datatable-column name="Action" prop="id" [canAutoResize]="true">
+                                <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value"
+                                             let-row="row">
+                                    <button type="button" mat-icon-button
+                                            *ngIf="!editing[rowIndex + '']"
+                                            (click)="edit(rowIndex)"
+                                            (mouseenter)="edit(rowIndex)"
+                                            title="Click to edit">
+                                        <mat-icon>edit</mat-icon>
+                                    </button>
+                                    <button type="button" mat-icon-button
+                                            *ngIf="editing[rowIndex + '']"
+                                            (dblclick)="editing[rowIndex + ''] = false"
+                                            title="Click to save">
+                                        <mat-icon>save</mat-icon>
+                                    </button>
+                                </ng-template>
+                            </ngx-datatable-column>-->
+                        </ngx-datatable>
+                    </div>
+                    <mat-divider></mat-divider>
+                </mat-card-content>
+                <mat-card-actions class="lamis-edit-form-actions">
+                    <button mat-raised-button type="button" (click)="previousState()">Back</button>
+                    <button mat-raised-button color='primary'
+                            [disabled]="laboratoryForm.invalid || rows.length === 0 || isSaving"
+                            type="submit">
+                        {{entity.id !== undefined ? 'Update' : 'Save'}}
+                    </button>
+                </mat-card-actions>
+            </mat-card>
+        </form>
+    </div>
+</div>

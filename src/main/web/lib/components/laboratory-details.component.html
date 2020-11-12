@@ -1,0 +1,61 @@
+<div class="lamis-edit-form">
+    <div class="lamis-edit-form-container">
+        <mat-card>
+            <mat-card-header>
+            </mat-card-header>
+            <mat-card-content>
+                <adf-card-view [properties]="properties" editable="false"></adf-card-view>
+                <mat-divider></mat-divider>
+                <ngx-datatable
+                    #mydatatable
+                    *ngIf="dataSource"
+                    class="material full-width"
+                    [headerHeight]="50"
+                    [limit]="5"
+                    [columnMode]="ColumnMode.force"
+                    [footerHeight]="50"
+                    rowHeight="auto"
+                    [rows]="dataSource"
+                >
+                    <ngx-datatable-column name="Test Description" [prop]="'description'"
+                                          [canAutoResize]="true">
+                        <ng-template ngx-datatable-cell-template let-value="value">
+                            <mat-form-field class="full-width">
+                                <input matInput disabled [value]="value" style="font-weight: 900">
+                            </mat-form-field>
+                        </ng-template>
+                    </ngx-datatable-column>
+                    <ngx-datatable-column name="Result" [prop]="'result'" [canAutoResize]="true">
+                        <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value"
+                                     let-row="row">
+                            <mat-form-field class="full-width">
+                                <input matInput disabled [value]="value" style="font-weight: 900">
+                            </mat-form-field>
+                        </ng-template>
+                    </ngx-datatable-column>
+                    <ngx-datatable-column name="Comment" [prop]="'comment'" [canAutoResize]="true">
+                        <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value"
+                                     let-row="row">
+                            <mat-form-field class="full-width">
+                                <input matInput disabled [value]="value" style="font-weight: 900">
+                            </mat-form-field>
+                        </ng-template>
+                    </ngx-datatable-column>
+                    <ngx-datatable-column name="Indication" [prop]="'indication'" [canAutoResize]="true">
+                        <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value"
+                                     let-row="row">
+                            <mat-form-field class="full-width">
+                                <input matInput disabled [value]="value" style="font-weight: 900">
+                            </mat-form-field>
+                        </ng-template>
+                    </ngx-datatable-column>
+                </ngx-datatable>
+            </mat-card-content>
+            <mat-card-actions class="lamis-edit-form-actions">
+                <button mat-button (click)="previousState()">Back</button>
+                <button mat-raised-button color="warn" (click)="delete()">Delete</button>
+                <button mat-raised-button color="primary" (click)="edit()">Edit</button>
+            </mat-card-actions>
+        </mat-card>
+    </div>
+</div>

@@ -145,53 +145,70 @@ export class LaboratoryEditComponent implements OnInit {
         let abort = false;
         // this.progressBar.mode = 'indeterminate';
         this.rows = this.rows.map(line => {
-            if (line.lab_test_id === 16 && !line.indication) {
-                this._dialogService.openAlert({
-                    title: 'Indication is required',
-                    message: 'Please select indication for Viral Load Test',
-                    disableClose: true
-                });
-                this.isSaving = false;
-                abort = true;
+                if (line.lab_test_id === 16 && !line.indication) {
+                    this._dialogService.openAlert({
+                        title: 'Indication is required',
+                        message: 'Please select indication for Viral Load Test',
+                        disableClose: true
+                    });
+                    this.isSaving = false;
+                    abort = true;
+                }
+                if (line.lab_test_id !== 16 && line.indication) {
+                    line.indication = null;
+                }
+                if (this.entity.dateAssay && !line.result) {
+                    this._dialogService.openAlert({
+                        title: 'Result is required',
+                        message: 'Please provide test result',
+                        disableClose: true
+                    });
+                    this.isSaving = false;
+                    abort = true;
+                }
+                if (line.result && !this.entity.dateAssay) {
+                    this.isSaving = false;
+                    abort = true;
+                    this._dialogService.openAlert({
+                        title: 'Form not complete',
+                        message: 'Please provide Date of Test Assay',
+                        disableClose: true
+                    });
+                }
+                const result = parseInt(line.result, 10);
+                if ((line.lab_test_id === 16 || line.lab_test_id === 1) && this.entity.dateAssay) {
+                    if (!result) {
+                        let zero = false;
+                        if (result === 0) {
+                            zero = true;
+                        }
+                        if (!zero) {
+                            this._dialogService.openAlert({
+                                title: 'Result is invalid',
+                                message: 'Please provide numeric result for test',
+                                disableClose: true
+                            });
+                            this.isSaving = false;
+                            abort = true;
+                        }
+                    } else if (result < 0) {
+                        this._dialogService.openAlert({
+                            title: 'Result is invalid',
+                            message: 'Please provide value >=0 for test result',
+                            disableClose: true
+                        });
+                        this.isSaving = false;
+                        abort = true;
+                    } else {
+                        line.result = result.toString();
+                    }
+                }
+                if (!!line.result && line.result.toUpperCase() === 'NAN') {
+                    line.result = null;
+                }
+                return line;
             }
-            if (line.lab_test_id !== 16 && line.indication) {
-                line.indication = null;
-            }
-            if (this.entity.dateAssay && !line.result) {
-                this._dialogService.openAlert({
-                    title: 'Result is required',
-                    message: 'Please provide test result',
-                    disableClose: true
-                });
-                this.isSaving = false;
-                abort = true;
-            }
-            if (line.result && !this.entity.dateAssay) {
-                this.isSaving = false;
-                abort = true;
-                this._dialogService.openAlert({
-                    title: 'Form not complete',
-                    message: 'Please provide Date of Test Assay',
-                    disableClose: true
-                });
-            }
-            const result = parseInt(line.result, 10);
-            if ((line.lab_test_id === 16 || line.lab_test_id === 1) && this.entity.dateAssay && !result) {
-                this._dialogService.openAlert({
-                    title: 'Result is invalid',
-                    message: 'Please provide numeric value (>=0) result for test',
-                    disableClose: true
-                });
-                this.isSaving = false;
-                abort = true;
-            } else {
-                line.result = result.toString();
-            }
-            if (!!line.result && line.result.toUpperCase() === 'NAN') {
-                line.result = null;
-            }
-            return line;
-        });
+        );
 
         if (abort) {
             return;
